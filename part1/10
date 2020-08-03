@@ -1,0 +1,89 @@
+import React, { useState } from 'react';
+import ReactDOM from 'react-dom';
+
+const Button = ({name,onClick}) =>{
+  return(
+    <>
+      <button onClick={onClick} >{name}</button>
+    </>
+  )
+}
+
+const Statistic = ({text,value}) => {
+  if(text == "positive"){
+    return(
+      <>
+        <p>{text} {value} %</p>
+      </>
+    )
+  }else{
+    return(
+      <>
+        <p>{text} {value}</p>
+      </>
+    )
+  }
+
+}
+const Statistics = ({good,neutral,bad,total,average,positive}) => {
+  if(total==0){
+    return(
+      <div>
+        <p>No feedback given</p>
+      </div>
+    )
+  }else{
+    return(
+      <div>
+      <h1>statistics</h1>
+        <Statistic text="good" value ={good} />
+        <Statistic text="neutral" value ={neutral} />
+        <Statistic text="bad" value ={bad} />
+        <Statistic text="all" value ={total} />
+        <Statistic text="average" value ={average} />
+        <Statistic text="positive" value ={positive} />
+
+      </div>
+    )
+  }
+}
+
+
+
+const App = () =>{
+  const [good,setGood] = useState(0) 
+  const [neutral,setNeutral] = useState(0) 
+  const [bad,setBad] = useState(0) 
+  const [total,setTotal] = useState(0) 
+  const [average,setAverage] = useState(0) 
+  const [positive,setPositive] = useState(0) 
+  function setValues(fun,val){
+    setTotal(total+1)
+    if(val === "good"){
+      fun(good+1)
+      setAverage((good+1-bad)/(total+1))
+      setPositive((good+1)*100/(total+1))
+    }else{
+      setPositive(good*100/(total+1))
+      if(val === "bad"){
+        fun(bad+1)
+        setAverage((good-bad-1)/(total+1))
+      }else{
+        fun(neutral+1)
+        setAverage((good-bad)/(total+1))
+      }
+    }
+  }
+
+  return(
+  <div>
+    <h1>give feedback</h1>
+    <Button name="good" onClick={() => setValues(setGood,"good")}/>
+    <Button name="neutral" onClick={() => setValues(setNeutral,"neutral")}/>
+    <Button name="bad" onClick={() => setValues(setBad,"bad")}/>
+    <Statistics good={good} bad={bad} neutral={neutral} total={total} positive={positive} average={average}/>
+  </div>
+  )
+}
+ReactDOM.render(<App />, document.getElementById('root'));
+
