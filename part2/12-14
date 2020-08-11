@@ -1,0 +1,130 @@
+import React,{useEffect,useState} from 'react';
+import ReactDOM from 'react-dom';
+import axios from 'axios'
+
+const Temp = ({temp,src,name,speed,dir})=>(
+  <div>
+    <h1>Weather in {name}</h1>
+    <p>temperature: {temp} Celsius</p> 
+    <img src={src}/>
+    <p>wind: {speed} mph direction {dir}</p>
+  </div>
+)
+const Pais = ({infoMet,setInfoMet,countri}) => {
+  function actualizar(a,callback){
+    setInfoMet(a.current)
+    callback(null,infoMet)
+  }
+  useEffect(()=>{
+    axios.get('http://api.weatherstack.com/current?access_key=' + process.env.REACT_APP_API + '&query=' + countri.name).then(response => {
+        actualizar(response.data,function(err){
+          if(err) return console.log("error");
+          console.log("todo bien");
+        })
+    })
+  },[])
+    console.log(infoMet);
+    return(
+    <div>
+      <h1>{countri.name}</h1>
+      capital {countri.capital}
+      <p></p>
+      population {countri.population}
+      <h2>languages</h2>
+      <ul>
+      {countri.languages.map((lan,i) => <li key={i}>{lan.name}</li>)}
+      </ul>
+      <img src={countri.flag} width={100}/>
+      <Temp temp={infoMet.temperature} name={countri.name} src={infoMet.weather_icons} speed={infoMet.wind_speed} dir={infoMet.wind_dir}/>
+    </div>
+  )
+}
+
+
+
+const Paises = ({infoMet,setInfoMet,setShowCountries, showCountries,busco}) => {
+  function handleClick(e,countri){
+    setShowCountries([countri])
+  }
+  if (showCountries.length == 0 ) {
+    if (busco) {
+      return(
+        <>
+          <p>There aren't countries that starts with</p>
+        </>
+      )
+    }else{
+      return(<></>)
+    }
+  }else{ 
+    if (showCountries.length <= 10) {
+      if(showCountries.length == 1){
+        let countri = showCountries[0]
+        return(
+          <Pais key={0} countri={countri} infoMet={infoMet} setInfoMet={setInfoMet}/>
+        )
+      }else{
+        return(
+          <>
+            {showCountries.map(countri => 
+              <li key = {countri.name}>{countri.name}
+              <button onClick={(e) => handleClick(e,countri)}>show</button>
+              </li>
+            )}
+          </>
+        )
+      }
+    }else{
+      return(
+        <>
+          <p>Too many matches,specify another filter</p>
+        </>
+      )
+    }
+  }
+}
+
+function App() {
+  const [countries,setCountries] = useState([])
+  const [showCountries,setShowCountries] = useState(countries)
+  const [busco,setBusco] = useState(false)
+  const [infoMet,setInfoMet] = useState([])
+
+  useEffect(() => {
+    axios.get('https://restcountries.eu/rest/v2/all').then(response => {
+    setCountries(response.data)
+    })
+  }
+,[])
+
+
+function compare(s1,s2){
+  return s1.toLowerCase().startsWith(s2.toLowerCase())
+}
+
+const handleChange = (e) => {
+  let search = e.target.value 
+  let count = countries.filter(countri => compare(countri.name,search))
+  if (search != '') {
+    setBusco(true)
+    setShowCountries(count)
+  }else{
+    setBusco(false)
+    setShowCountries([])
+  }
+}
+
+  return (
+    <div>
+        <form>
+          find countries:<input onChange={handleChange} /> 
+          <Paises infoMet={infoMet} setInfoMet={setInfoMet} setShowCountries={setShowCountries} showCountries={showCountries} busco={busco}/>
+        </form>
+    </div>
+  );
+}
+
+ReactDOM.render(
+  <App />,
+  document.getElementById('root')
+)
